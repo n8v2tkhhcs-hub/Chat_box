@@ -2,6 +2,7 @@ import os
 import json
 import random
 import streamlit as st
+st.write("✅ 代码已启动")   # 这行是临时诊断，必须放在最前面
 from dotenv import load_dotenv
 from openai import OpenAI
 
