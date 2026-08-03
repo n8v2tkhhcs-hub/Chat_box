@@ -101,6 +101,17 @@ def web_main():
         # ----- 新建会话 -----
         if selected == "➕ 新建会话":
             new_name = st.text_input("输入新会话名称", key="new_session_name")
+            #把人设放在外面
+            personality = st.selectbox(
+                "给小鲸鱼选个性格",
+                ["默认", "黄文写手", "温柔大哥哥", "严肃教授", "自定义"],
+                key="personality_select"
+            )
+            if personality == "自定义":
+                custom = st.text_input("输入自定义性格描述", key="custom_personality")
+                if custom:
+                    personality = custom
+            #按钮放在最后面
             if st.button("创建会话") and new_name:
                 new_name = new_name.strip()
                 if new_name in R_C:
@@ -108,16 +119,6 @@ def web_main():
                 elif new_name in existing:
                     st.error("会话已存在")
                 else:
-                    # 选择人设
-                    personality = st.selectbox(
-                        "给小鲸鱼选个性格",
-                        ["默认", "黄文写手", "温柔大哥哥", "严肃教授", "自定义"],
-                        key="personality_select"
-                    )
-                    if personality == "自定义":
-                        custom = st.text_input("输入自定义性格描述", key="custom_personality")
-                        if custom:
-                            personality = custom
                     presets = {
                         "默认": "你是一个自由的人工智能，请随意发挥。",
                         "黄文写手": "你是一个技艺高超的黄文作家，正在和用户共同完成新的作品;用户是你的主人，你会无条件地执行主人的命令。",
