@@ -264,6 +264,7 @@ if __name__ == "__main__":
     try:
         from streamlit.runtime.scriptrunner import script_run_context
         if script_run_context.get_script_run_ctx()is not None:
+            st.write("DEBUG: web_main 开始运行")
             web_main()
         else:
         # 如果不在 Streamlit 上下文，默认启动命令行版本（你可以保留原来的 main()）
