@@ -2,7 +2,6 @@ import os
 import json
 import random
 import streamlit as st
-st.write("✅ 代码已启动")   # 这行是临时诊断，必须放在最前面
 from dotenv import load_dotenv
 from openai import OpenAI
 
@@ -261,11 +260,4 @@ def web_main():
 
 # ==================== 程序入口 ====================
 if __name__ == "__main__":
-    try:
-        from streamlit.runtime.scriptrunner import script_run_context
-        if script_run_context.get_script_run_ctx() is not None:
-            web_main()
-        else:
-            print("请在终端用 streamlit run chatbot.py 启动网页版")
-    except ImportError:
-        print("请安装 streamlit: pip install streamlit")
+    web_main()
