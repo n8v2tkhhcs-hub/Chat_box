@@ -73,6 +73,7 @@ def chat_with_ai(messages):
 # ==================== 网页主函数 ====================
 def web_main():
     # 页面配置（必须放在最前面）
+    st.write("✅ 进入 web_main")
     st.set_page_config(page_title="小鲸鱼陪伴室", page_icon="🐳")
     st.title("🐳 小鲸鱼聊天室")
 
