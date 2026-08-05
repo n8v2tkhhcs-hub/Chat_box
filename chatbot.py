@@ -13,7 +13,7 @@ R_C = {"列表", "换人", "重命名", "exit", "退出", "下次再聊", "删�
 
 # ==================== 初始化 DeepSeek 客户端 ====================
 client = OpenAI(
-    api_key = os.getenv("DEEPSEEK_API_KEY")
+    api_key = os.getenv("DEEPSEEK_API_KEY"),
     base_url='https://api.deepseek.com'
 )
 
