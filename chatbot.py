@@ -80,7 +80,13 @@ def web_main():
     if "active_prob" not in st.session_state:
         st.session_state.active_prob = 0.0
     if "just_loaded" not in st.session_state:
-        st.session_state.just_loaded = True
+        st.session_state.just_loaded =False
+    if "enable_active_chat" not in st.session_state:
+        st.session_state.enable_active_chat=False
+    if "api_call_count" not in st.session_state:
+        st.session_state.api_call_count = 0
+    if "max_api_calls" not in st.session_state:
+        st.session_state.max_api_calls = 5
 
     # ==================== 侧边栏 ====================
     with st.sidebar:
@@ -107,6 +113,12 @@ def web_main():
                 custom = st.text_input("输入自定义性格描述", key="custom_personality")
                 if custom:
                     personality = custom
+            new_prob=st.slider(
+                '主动开口概率（%）',
+                0,100,50,
+                step=1,
+                key='new_prob_slider'
+            )/100.0
             #按钮放在最后面
             if st.button("创建会话") and new_name:
                 new_name = new_name.strip()
@@ -144,20 +156,6 @@ def web_main():
         if st.session_state.session_id:
             st.divider()
             st.subheader(f"📌 当前会话：{st.session_state.session_id}")
-
-            # 主动概率滑块
-            new_prob = st.slider(
-                "小鲸鱼主动搭话概率 (%)",
-                0, 100,
-                int(st.session_state.active_prob * 100),
-                step=1,
-                key="prob_slider"
-            )
-            if new_prob / 100.0 != st.session_state.active_prob:
-                st.session_state.active_prob = new_prob / 100.0
-                save_session(st.session_state.session_id,
-                             st.session_state.messages,
-                             st.session_state.active_prob)
 
             # 重命名按钮
             if st.button("✏️ 重命名"):
@@ -217,21 +215,33 @@ def web_main():
     # ----- 主动发言逻辑（仅首次加载时） -----
     if st.session_state.just_loaded:
         st.session_state.just_loaded = False
-        # 场景一：新会话（只有 system 消息），且主动概率 > 0，AI 自动开场
-        if len(messages) == 1 and st.session_state.active_prob > 0:
-            with st.spinner("小鲸鱼正在构思开场白…"):
-                opening = chat_with_ai(messages)
-            messages.append({"role": "assistant", "content": opening})
-            save_session(st.session_state.session_id, messages, st.session_state.active_prob)
-            st.rerun()
-        # 场景二：最后一条是用户消息，且概率触发，AI 追发一条
-        elif len(messages) > 1 and messages[-1]["role"] == "user" and st.session_state.active_prob > 0:
-            if random.random() < st.session_state.active_prob:
-                with st.spinner("小鲸鱼有话想说…"):
-                    extra_reply = chat_with_ai(messages)
-                messages.append({"role": "assistant", "content": extra_reply})
-                save_session(st.session_state.session_id, messages, st.session_state.active_prob)
-                st.rerun()
+
+        if (st.session_state.enable_active_chat and
+            st.session_state.active_prob>0 and
+            st.session_state.api_call_count < st.session_state.max_api_calls):
+            triggered=False
+
+            if st.session_state.api_call_count>=st.session_state.max_api_calls:
+                st.error("API调用次数已用尽，查看调用情况或调整上限")
+            else:
+                if len(messages)==1:
+                    with st.spinner("小鲸鱼正在构思开场白…"):
+                        opening=chat_with_ai(messages)
+                    messages.append({"role":"assistant","content": opening})
+                    st.session_state.api_call_count +=1
+                    save_session(st.session_state.session_id,messages,st.session_state.active_prob)
+                    triggered=True
+                elif len(messages)>1 and messages[-1]["role"]=="user":
+                    if random.random()<st.session_state.active_prob:
+                        with st.spinner("小鲸鱼有话想说"):
+                            extra_reply=chat_with_ai(messages)
+                        messages.append({"role":"assistant","content": extra_reply})
+                        st.session_state.api_call_count +=1
+                        save_session(st.session_state.session_id,messages,st.session_state.active_prob)
+                        triggered=True
+
+                if triggered:
+                    st.rerun()
 
     # ----- 显示历史消息 -----
     for msg in messages[1:]:  # 跳过系统提示
@@ -240,10 +250,14 @@ def web_main():
 
     # ----- 聊天输入框 -----
     if prompt := st.chat_input("说点什么…"):
+        if st.session_state.api_call_count>=st.session_state.max_api_calls:
+            st.error('今日调用完了，检查')
+        else:
         # 1. 添加用户消息
-        messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user"):
-            st.write(prompt)
+            messages.append({"role": "user", "content": prompt})
+            with st.chat_message("user"):
+                st.write(prompt)
+            st.session_state.api_call_count +=1
 
         # 2. 生成 AI 回复
         with st.chat_message("assistant"):
