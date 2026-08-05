@@ -86,7 +86,7 @@ def web_main():
     if "api_call_count" not in st.session_state:
         st.session_state.api_call_count = 0
     if "max_api_calls" not in st.session_state:
-        st.session_state.max_api_calls = 5
+        st.session_state.max_api_calls = 50
 
     # ==================== 侧边栏 ====================
     with st.sidebar:
